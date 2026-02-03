@@ -61,9 +61,11 @@ function M.setup(user_config)
   -- Validate style config value
   if not valid_styles[config.style] then
     vim.notify(
-      "[TermLet] Invalid highlight style '" .. tostring(config.style)
+      "[TermLet] Invalid highlight style '"
+        .. tostring(config.style)
         .. "', falling back to 'underline'. Valid values: underline, color, both, none",
-      vim.log.levels.WARN)
+      vim.log.levels.WARN
+    )
     config.style = "underline"
   end
 

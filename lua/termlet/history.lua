@@ -175,8 +175,8 @@ local function format_history_line(entry, index, is_selected, width)
   local exit_str = string.format("exit:%d", entry.exit_code or -1)
 
   -- Build the line
-  local line = string.format("%s%s  %-25s  %8s  %8s  %s",
-    prefix, status_icon, display_name, exec_time, exit_str, time_str)
+  local line =
+    string.format("%s%s  %-25s  %8s  %8s  %s", prefix, status_icon, display_name, exec_time, exit_str, time_str)
 
   return line
 end
@@ -217,8 +217,7 @@ local function render_history()
 
   -- Add header
   table.insert(lines, "")
-  local header = string.format("  %s  %-25s  %8s  %8s  %s",
-    " ", "Script", "Duration", "Exit", "Time")
+  local header = string.format("  %s  %-25s  %8s  %8s  %s", " ", "Script", "Duration", "Exit", "Time")
   table.insert(lines, header)
   table.insert(lines, "  " .. string.rep("─", width - 4))
 
@@ -244,14 +243,14 @@ local function render_history()
           line = #lines - 1,
           col_start = 4,
           col_end = 7,
-          group = state.config.highlight.success
+          group = state.config.highlight.success,
         })
       else
         table.insert(highlights, {
           line = #lines - 1,
           col_start = 4,
           col_end = 7,
-          group = state.config.highlight.error
+          group = state.config.highlight.error,
         })
       end
     end

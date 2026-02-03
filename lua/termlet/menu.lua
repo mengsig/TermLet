@@ -402,12 +402,18 @@ local function setup_keymaps()
     else
       -- For mapped keys, check search mode first
       local original_fn
-      if char == "j" then original_fn = move_down
-      elseif char == "k" then original_fn = move_up
-      elseif char == "q" then original_fn = M.close
-      elseif char == "/" then original_fn = enter_search_mode
-      elseif char == "?" then original_fn = toggle_help
-      elseif char == "G" then original_fn = go_to_last
+      if char == "j" then
+        original_fn = move_down
+      elseif char == "k" then
+        original_fn = move_up
+      elseif char == "q" then
+        original_fn = M.close
+      elseif char == "/" then
+        original_fn = enter_search_mode
+      elseif char == "?" then
+        original_fn = toggle_help
+      elseif char == "G" then
+        original_fn = go_to_last
       end
 
       vim.keymap.set("n", char, function()
