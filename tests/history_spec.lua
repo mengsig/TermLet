@@ -371,6 +371,94 @@ describe("termlet.history", function()
       assert.are.equal(1, #entries)
       assert.is_nil(entries[1].output_lines)
     end)
+
+    it("should store truncated output_lines when exceeding max_output_lines", function()
+      -- Simulate the truncation logic used in init.lua's execute_script
+      local all_lines = {}
+      for i = 1, 2000 do
+        all_lines[i] = "line " .. i
+      end
+
+      local max_output_lines = 1000
+      local output_lines
+      if #all_lines > max_output_lines then
+        output_lines = { unpack(all_lines, #all_lines - max_output_lines + 1) }
+      else
+        output_lines = all_lines
+      end
+
+      history.add_entry({
+        script_name = "verbose_build",
+        exit_code = 1,
+        execution_time = 30.0,
+        timestamp = os.time(),
+        working_dir = "/project",
+        output_lines = output_lines,
+      })
+
+      local entries = history.get_entries()
+      assert.are.equal(1, #entries)
+      assert.are.equal(1000, #entries[1].output_lines)
+      -- Should keep the tail (last 1000 lines)
+      assert.are.equal("line 1001", entries[1].output_lines[1])
+      assert.are.equal("line 2000", entries[1].output_lines[1000])
+    end)
+
+    it("should keep all output_lines when under max_output_lines limit", function()
+      local all_lines = {}
+      for i = 1, 500 do
+        all_lines[i] = "line " .. i
+      end
+
+      local max_output_lines = 1000
+      local output_lines
+      if #all_lines > max_output_lines then
+        output_lines = { unpack(all_lines, #all_lines - max_output_lines + 1) }
+      else
+        output_lines = all_lines
+      end
+
+      history.add_entry({
+        script_name = "short_build",
+        exit_code = 1,
+        execution_time = 5.0,
+        timestamp = os.time(),
+        working_dir = "/project",
+        output_lines = output_lines,
+      })
+
+      local entries = history.get_entries()
+      assert.are.equal(1, #entries)
+      assert.are.equal(500, #entries[1].output_lines)
+      assert.are.equal("line 1", entries[1].output_lines[1])
+      assert.are.equal("line 500", entries[1].output_lines[500])
+    end)
+
+    it("should preserve stacktrace at end of output after truncation", function()
+      -- Simulate verbose build output with stacktrace at the end
+      local all_lines = {}
+      for i = 1, 1500 do
+        all_lines[i] = "build output line " .. i
+      end
+      -- Stacktrace at the end
+      all_lines[1501] = "Traceback (most recent call last):"
+      all_lines[1502] = '  File "test.py", line 42, in test_func'
+      all_lines[1503] = "    assert False"
+      all_lines[1504] = "AssertionError"
+
+      local max_output_lines = 1000
+      local output_lines
+      if #all_lines > max_output_lines then
+        output_lines = { unpack(all_lines, #all_lines - max_output_lines + 1) }
+      else
+        output_lines = all_lines
+      end
+
+      assert.are.equal(1000, #output_lines)
+      -- Stacktrace should be preserved at the end
+      assert.are.equal("AssertionError", output_lines[1000])
+      assert.are.equal("Traceback (most recent call last):", output_lines[997])
+    end)
   end)
 
   describe("show_output", function()
@@ -945,6 +1033,19 @@ describe("termlet history integration", function()
         history = {
           enabled = true,
           max_entries = 100,
+        },
+      })
+      -- Should not error
+      assert.is_not_nil(termlet)
+    end)
+
+    it("should accept max_output_lines configuration", function()
+      termlet.setup({
+        scripts = {},
+        history = {
+          enabled = true,
+          max_entries = 50,
+          max_output_lines = 500,
         },
       })
       -- Should not error
